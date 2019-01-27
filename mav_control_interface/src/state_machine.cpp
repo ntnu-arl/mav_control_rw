@@ -61,6 +61,9 @@ void StateMachineDefinition::PublishAttitudeCommand (
 
   msg->header.stamp = ros::Time::now();  // TODO(acmarkus): get from msg
   mav_msgs::msgRollPitchYawrateThrustFromEigen(command, msg.get());
+
+  msg->header.frame_id = "/body";
+
   command_publisher_.publish(msg);
 }
 
@@ -89,7 +92,7 @@ void StateMachineDefinition::PublishCurrentReference()
   transform.setRotation(q);
 
   transform_broadcaster_.sendTransform(
-      tf::StampedTransform(transform, time_now, reference_frame_id_, nh_.getNamespace() + "/current_reference"));
+      tf::StampedTransform(transform, time_now, reference_frame_id_, /*nh_.getNamespace() + "/current_reference"*/ "current_reference"));
 
   if (current_reference_publisher_.getNumSubscribers() > 0) {
     trajectory_msgs::MultiDOFJointTrajectoryPtr msg(new trajectory_msgs::MultiDOFJointTrajectory);
@@ -97,6 +100,18 @@ void StateMachineDefinition::PublishCurrentReference()
     msg->header.stamp = time_now;
     msg->header.frame_id = reference_frame_id_;
     current_reference_publisher_.publish(msg);
+
+    /*tf::Transform currentReference_transform(
+                  tf::Quaternion(current_reference.orientation_W_B.x(),
+                                 current_reference.orientation_W_B.y(),
+                                 current_reference.orientation_W_B.z(),
+                                 current_reference.orientation_W_B.w()),
+                  tf::Vector3(current_reference.position_W.x(),
+                              current_reference.position_W.y(),
+                              current_reference.position_W.z())
+                  );
+    transform_broadcaster_.sendTransform(tf::StampedTransform(currentReference_transform, time_now, "world", "current_reference"));*/
+
   }
 }
 

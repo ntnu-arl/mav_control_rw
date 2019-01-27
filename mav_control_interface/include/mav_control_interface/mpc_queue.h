@@ -77,6 +77,11 @@ class MPCQueue
   Vector3dDeque velocity_reference_;
   Vector3dDeque acceleration_reference_;
   std::deque<double> yaw_reference_;
+
+  // Customization
+  double yaw_reference_unwrap_;
+  // Customization
+
   std::deque<double> yaw_rate_reference_;
   double queue_start_time_;
 

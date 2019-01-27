@@ -29,6 +29,10 @@ MPCQueue::MPCQueue(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh,
       prediction_sampling_time_(0.01),
       queue_dt_(0.01),
       queue_start_time_(0.0)
+
+     // Customization
+     ,yaw_reference_unwrap_(0.0)
+     // Customization
 {
   trajectory_reference_vis_publisher_ = nh_.advertise<visualization_msgs::Marker>( "reference_trajectory", 0 );
   //publish at 10 hz
@@ -167,7 +171,21 @@ void MPCQueue::insertReferenceTrajectory(const mav_msgs::EigenTrajectoryPointDeq
       position_reference_.push_back(it->position_W);
       velocity_reference_.push_back(it->velocity_W);
       acceleration_reference_.push_back(it->acceleration_W);
-      yaw_reference_.push_back(it->getYaw());
+
+      // Customization
+      if (!yaw_reference_.empty()){
+        double delta_yaw = it->getYaw() - yaw_reference_.back();
+        while (delta_yaw > M_PI){
+          yaw_reference_unwrap_ += 2.0 * M_PI; 
+        }
+        while (delta_yaw < -M_PI){
+          yaw_reference_unwrap_ -= 2.0 * M_PI; 
+        }
+      }
+      yaw_reference_.push_back(it->getYaw() + yaw_reference_unwrap_);
+      //yaw_reference_.push_back(it->getYaw());
+      // Customization
+
       yaw_rate_reference_.push_back(it->getYawRate());
       current_queue_size_++;
     }
@@ -186,7 +204,21 @@ void MPCQueue::pushBackPoint(const mav_msgs::EigenTrajectoryPoint& point)
     position_reference_.push_back(point.position_W);
     velocity_reference_.push_back(point.velocity_W);
     acceleration_reference_.push_back(point.acceleration_W);
-    yaw_reference_.push_back(point.getYaw());
+
+    // Customization
+    if (!yaw_reference_.empty()){
+      double delta_yaw = point.getYaw() - yaw_reference_.back();
+      while (delta_yaw > M_PI){
+        yaw_reference_unwrap_ += 2.0 * M_PI; 
+      }
+      while (delta_yaw < -M_PI){
+        yaw_reference_unwrap_ -= 2.0 * M_PI; 
+      }
+    }
+    yaw_reference_.push_back(point.getYaw() + yaw_reference_unwrap_);
+    //yaw_reference_.push_back(point.getYaw());
+    // Customization
+
     yaw_rate_reference_.push_back(point.getYawRate());
     current_queue_size_++;
   } else {

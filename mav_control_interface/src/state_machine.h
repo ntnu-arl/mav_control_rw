@@ -213,6 +213,9 @@ private:
   tf::TransformBroadcaster transform_broadcaster_;
   ros::Publisher current_reference_publisher_;
   ros::Publisher predicted_state_publisher_;
+
+  tf::TransformBroadcaster mavCurrentReference_tf_pub_;
+
   Parameters parameters_;
   mav_msgs::EigenOdometry current_state_;
   mav_msgs::EigenTrajectoryPointDeque current_reference_queue_;

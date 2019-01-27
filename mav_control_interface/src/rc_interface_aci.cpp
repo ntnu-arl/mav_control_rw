@@ -28,6 +28,7 @@ RcInterfaceAci::RcInterfaceAci(const ros::NodeHandle& nh)
   rc_sub_ = nh_.subscribe("rc", 1, &RcInterfaceAci::rcCallback, this);
 }
 
+
 void RcInterfaceAci::rcCallback(const sensor_msgs::JoyConstPtr& msg)
 {
   is_on_ = isRcOn(msg);
@@ -39,14 +40,14 @@ void RcInterfaceAci::rcCallback(const sensor_msgs::JoyConstPtr& msg)
     last_data_.left_up_down = msg->axes[2];
     last_data_.left_side = -msg->axes[3];
 
-    if (msg->axes[5] > 0.0)
+    if (msg->axes[5] > 0.0) //:P=-1, A=0, F=1 mode, (Controller OFF, axes[5]=0)
       last_data_.control_interface = RcData::ControlInterface::ON;
     else
       last_data_.control_interface = RcData::ControlInterface::OFF;
 
-    if (msg->axes[4] <= -0.5)
+    if (msg->axes[4] <= -0.5) //smk:Serial On=1/OFF=-1
       last_data_.control_mode = RcData::ControlMode::MANUAL;
-    else if (msg->axes[4] > -0.5 && msg->axes[4] < 0.5)
+    else if (msg->axes[4] > -0.5 && msg->axes[4] < 0.5) //Controller OFF
       last_data_.control_mode = RcData::ControlMode::ALTITUDE_CONTROL;
     else
       last_data_.control_mode = RcData::ControlMode::POSITION_CONTROL;
