@@ -84,6 +84,28 @@ void StateMachineDefinition::PublishCurrentReference()
 
   tf::Quaternion q;
   tf::Vector3 p;
+  
+  //CUSTOMIZATION
+  //First reference is published 1 meter below current state for avoiding ground effect for auto takeoff
+  static bool initSerial = false;
+  static mav_msgs::EigenTrajectoryPoint old_reference;
+  if (!initSerial)
+  {
+    current_reference.position_W.z() -= 1.0;
+    old_reference = current_reference;
+    initSerial = true;
+  }
+  else
+  {
+    //Error w.r.t previous reference if an actual reference has not been published keep the drone on ground with modifed reference
+    double error_x = std::abs(current_reference.position_W.x() - old_reference.position_W.x());
+    double error_y = std::abs(current_reference.position_W.y() - old_reference.position_W.y());
+    double error_z = std::abs(current_reference.position_W.z() -1.0 - old_reference.position_W.z());
+    if (error_x < 0.01 && error_y < 0.01 && error_z < 0.01) 
+      current_reference = old_reference;
+  }
+  //CUSTOMIZATION
+  
   tf::vectorEigenToTF(current_reference.position_W, p);
   tf::quaternionEigenToTF(current_reference.orientation_W_B, q);
 
