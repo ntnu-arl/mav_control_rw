@@ -47,7 +47,8 @@ void MPCQueue::clearQueue()
   position_reference_.clear();
   velocity_reference_.clear();
   acceleration_reference_.clear();
-  yaw_reference_.clear();
+  orientation_reference_.clear();
+  angular_velocity_W_reference_.clear();
   queue_start_time_ = 0.0;
 
   current_queue_size_ = 0;
@@ -152,8 +153,8 @@ void MPCQueue::insertReferenceTrajectory(const mav_msgs::EigenTrajectoryPointDeq
         position_reference_.erase(position_reference_.begin() + start_index, position_reference_.end());
         velocity_reference_.erase(velocity_reference_.begin() + start_index, velocity_reference_.end());
         acceleration_reference_.erase(acceleration_reference_.begin() + start_index, acceleration_reference_.end());
-        yaw_reference_.erase(yaw_reference_.begin() + start_index, yaw_reference_.end());
-        yaw_rate_reference_.erase(yaw_rate_reference_.begin() + start_index, yaw_rate_reference_.end());
+        orientation_reference_.erase(orientation_reference_.begin() + start_index, orientation_reference_.end());
+        angular_velocity_W_reference_.erase(angular_velocity_W_reference_.begin() + start_index, angular_velocity_W_reference_.end());
         current_queue_size_ = start_index; // +/- 1?
 
         //ROS_INFO("Queue start time: %f, queue end time: %f, reference start time: %f, start_index: %d", queue_start_time_, queue_end_time, commanded_time_from_start, start_index);
@@ -167,8 +168,8 @@ void MPCQueue::insertReferenceTrajectory(const mav_msgs::EigenTrajectoryPointDeq
       position_reference_.push_back(it->position_W);
       velocity_reference_.push_back(it->velocity_W);
       acceleration_reference_.push_back(it->acceleration_W);
-      yaw_reference_.push_back(it->getYaw());
-      yaw_rate_reference_.push_back(it->getYawRate());
+      orientation_reference_.push_back(it->orientation_W_B);
+      angular_velocity_W_reference_.push_back(it->angular_velocity_W);
       current_queue_size_++;
     }
   }
@@ -186,8 +187,8 @@ void MPCQueue::pushBackPoint(const mav_msgs::EigenTrajectoryPoint& point)
     position_reference_.push_back(point.position_W);
     velocity_reference_.push_back(point.velocity_W);
     acceleration_reference_.push_back(point.acceleration_W);
-    yaw_reference_.push_back(point.getYaw());
-    yaw_rate_reference_.push_back(point.getYawRate());
+    orientation_reference_.push_back(point.orientation_W_B);
+    angular_velocity_W_reference_.push_back(point.angular_velocity_W);    
     current_queue_size_++;
   } else {
     ROS_WARN_STREAM_THROTTLE(1, "MPC: maximum queue size reached, discarding last reference point");
@@ -207,8 +208,8 @@ void MPCQueue::popFrontPoint()
     position_reference_.pop_front();
     velocity_reference_.pop_front();
     acceleration_reference_.pop_front();
-    yaw_reference_.pop_front();
-    yaw_rate_reference_.pop_front();
+    orientation_reference_.pop_front();
+    angular_velocity_W_reference_.pop_front();
     queue_start_time_ += queue_dt_;
     current_queue_size_--;
   }
@@ -220,8 +221,8 @@ void MPCQueue::popBackPoint()
     position_reference_.pop_back();
     velocity_reference_.pop_back();
     acceleration_reference_.pop_back();
-    yaw_reference_.pop_back();
-    yaw_rate_reference_.pop_back();
+    orientation_reference_.pop_back();
+    angular_velocity_W_reference_.pop_back();
     current_queue_size_--;
   }
 }
@@ -233,8 +234,8 @@ void MPCQueue::getLastPoint(mav_msgs::EigenTrajectoryPoint* point)
     (*point).position_W = position_reference_.back();
     (*point).velocity_W = velocity_reference_.back();
     (*point).acceleration_W = acceleration_reference_.back();
-    (*point).setFromYaw(yaw_reference_.back());
-    (*point).setFromYawRate(yaw_rate_reference_.back());
+    (*point).orientation_W_B = orientation_reference_.back();
+    (*point).angular_velocity_W = angular_velocity_W_reference_.back();
   }
 }
 
@@ -285,22 +286,22 @@ void MPCQueue::printQueue()
 }
 
 void MPCQueue::getQueue(Vector3dDeque& position_reference, Vector3dDeque& velocity_reference,
-                        Vector3dDeque& acceleration_reference, std::deque<double>& yaw_reference,
-                        std::deque<double>& yaw_rate_reference)
+                        Vector3dDeque& acceleration_reference, QuaterniondDeque& orientation_reference,
+                        Vector3dDeque& angular_velocity_W_reference)
 {
 	position_reference.clear();
 	velocity_reference.clear();
 	acceleration_reference.clear();
-	yaw_reference.clear();
-	yaw_rate_reference.clear();
+  orientation_reference.clear();
+  angular_velocity_W_reference.clear();
 
   int N = std::ceil(prediction_sampling_time_/queue_dt_);
   for(int i=0; i<N*std::floor(current_queue_size_/N); i=i+N){
 	  position_reference.push_back(position_reference_.at(i));
 	  velocity_reference.push_back(velocity_reference_.at(i));
 	  acceleration_reference.push_back(acceleration_reference_.at(i));
-	  yaw_reference.push_back(yaw_reference_.at(i));
-	  yaw_rate_reference.push_back(yaw_rate_reference_.at(i));
+	  orientation_reference.push_back(orientation_reference_.at(i));
+	  angular_velocity_W_reference.push_back(angular_velocity_W_reference_.at(i));
   }
 }
 
@@ -370,16 +371,15 @@ void MPCQueue::linearInterpolateTrajectory(const mav_msgs::EigenTrajectoryPointD
     point.acceleration_W = acceleration_1
         + ((acceleration_2 - acceleration_1) / (time2 - time1)) * (*it - time1);
 
-    double yaw_2 = input_queue.at(sol - time_input.begin()).getYaw();
-    double yaw_1 = input_queue.at(sol - time_input.begin() - 1).getYaw();
+    Eigen::Quaterniond quat_2 = input_queue.at(sol - time_input.begin()).orientation_W_B;
+    Eigen::Quaterniond quat_1 = input_queue.at(sol - time_input.begin() - 1).orientation_W_B;
 
-    point.setFromYaw(yaw_1 + ((yaw_2 - yaw_1) / (time2 - time1)) * (*it - time1));
+    point.orientation_W_B = quat_1.slerp((*it - time1) / (time2 - time1), quat_2);
 
-    double yaw_rate_2 = input_queue.at(sol - time_input.begin()).getYawRate();
-    double yaw_rate_1 = input_queue.at(sol - time_input.begin() - 1).getYawRate();
+    Eigen::Vector3d angular_velocity_2 = input_queue.at(sol - time_input.begin()).angular_velocity_W;
+    Eigen::Vector3d angular_velocity_1 = input_queue.at(sol - time_input.begin() - 1).angular_velocity_W;
 
-    point.setFromYawRate(
-        yaw_rate_1 + ((yaw_rate_2 - yaw_rate_1) / (time2 - time1)) * (*it - time1));
+    point.angular_velocity_W = angular_velocity_1 + ((angular_velocity_2 - angular_velocity_1) / (time2 - time1)) * (*it - time1);
 
     point.time_from_start_ns = *it;
     interpolated_queue.push_back(point);

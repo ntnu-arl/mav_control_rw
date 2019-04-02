@@ -37,6 +37,7 @@
 #include <mav_disturbance_observer/KF_disturbance_observer.h>
 #include <mav_linear_mpc/steady_state_calculation.h>
 #include <mav_msgs/conversions.h>
+#include <mav_msgs/common.h>
 #include <mav_msgs/eigen_mav_msgs.h>
 #include <mav_control_interface/mpc_queue.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <unsupported/Eigen/MatrixFunctions>
+#include <nav_msgs/Odometry.h>
 
 #include <solver.h>
 
@@ -67,10 +69,7 @@ class LinearModelPredictiveController
   {
     q_velocity_ = q_velocity;
   }
-  void setAttitudePenality(const Eigen::Vector2d& q_attitude)
-  {
-    q_attitude_ = q_attitude;
-  }
+  
   void setCommandPenality(const Eigen::Vector3d& r_command)
   {
     r_command_ = r_command;
@@ -78,10 +77,6 @@ class LinearModelPredictiveController
   void setDeltaCommandPenality(const Eigen::Vector3d& r_delta_command)
   {
     r_delta_command_ = r_delta_command;
-  }
-  void setYawGain(double K_yaw)
-  {
-    K_yaw_ = K_yaw;
   }
 
   void setAltitudeIntratorGain(double Ki_altitude)
@@ -107,18 +102,53 @@ class LinearModelPredictiveController
   void setControlLimits(const Eigen::VectorXd& control_limits)
   {
     //roll_max, pitch_max, yaw_rate_max, thrust_min and thrust_max
-    roll_limit_ = control_limits(0);
-    pitch_limit_ = control_limits(1);
-    yaw_rate_limit_ = control_limits(2);
-    thrust_min_ = control_limits(3) - kGravity;
-    thrust_max_ = control_limits(4) - kGravity;
+    thrust_x_min_ = -control_limits(0);
+    thrust_x_max_ = control_limits(0);
+    thrust_y_min_ = -control_limits(1);
+    thrust_y_max_ = control_limits(1);
+    thrust_z_min_ = control_limits(2) - kGravity;
+    thrust_z_max_ = control_limits(3) - kGravity;    
+    
+    rot_acc_x_min_ = -control_limits(4);
+    rot_acc_x_max_ = control_limits(4);
+    rot_acc_y_min_ = -control_limits(5);
+    rot_acc_y_max_ = control_limits(5);
+    rot_acc_z_min_ = -control_limits(6);
+    rot_acc_z_max_ = control_limits(6);
   }
+
+  void setAttitudeGain(const Eigen::Vector3d& gain_attitude)
+  {
+    gain_attitude_ = gain_attitude;
+    ROS_INFO_STREAM("gain_attitude = \n" << gain_attitude_);
+  }
+
+  void setAngularRateGain(const Eigen::Vector3d& gain_angular_rate)
+  {
+    gain_angular_rate_ = gain_angular_rate;
+    ROS_INFO_STREAM("gain_angular_rate = \n" << gain_angular_rate);   
+  }  
 
   void applyParameters();
 
-  double getMass() const
+  double getMass1() const
   {
-    return mass_;
+    return mass1_;
+  }
+
+  double getMass2() const
+  {
+    return mass2_;
+  }
+
+  double getLinkLength() const
+  {
+    return length_;
+  }
+
+  void getRotationL_WB(Eigen::Matrix3d* rotation_matrix) 
+  {
+    *rotation_matrix = odometryL_.orientation_W_B.toRotationMatrix();
   }
 
   // get reference and predicted state
@@ -127,18 +157,22 @@ class LinearModelPredictiveController
   bool getPredictedState(mav_msgs::EigenTrajectoryPointDeque* predicted_state) const;
 
   // set odom and commands
-  void setOdometry(const mav_msgs::EigenOdometry& odometry);
+  void setOdometry(const mav_msgs::EigenOdometry& odometry, mav_msgs::EigenOdometry* odometry_L_out);
+  void setEncoder(const Eigen::Vector3d& encoders);  
   void setCommandTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
   void setCommandTrajectory(const mav_msgs::EigenTrajectoryPointDeque& command_trajectory);
 
   // compute control input
-  void calculateRollPitchYawrateThrustCommand(Eigen::Vector4d* ref_attitude_thrust);
+  void calculateAttitudeThrustCommand(Eigen::Vector4d *thrust_yaw_quad1, Eigen::Vector4d *thrust_yaw_quad2);
+  
+  /* FAKE LENGTH */
+  void setOdometry2(const mav_msgs::EigenOdometry& odometry2);  
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
 
   // constants
-  static constexpr int kStateSize = 8;
+  static constexpr int kStateSize = 6;
   static constexpr int kInputSize = 3;
   static constexpr int kMeasurementSize = 6;
   static constexpr int kDisturbanceSize = 3;
@@ -168,25 +202,32 @@ class LinearModelPredictiveController
   Eigen::Matrix<double, kStateSize, kStateSize> model_A_;   //dynamics matrix
   Eigen::Matrix<double, kStateSize, kInputSize> model_B_;   //transfer matrix
   Eigen::Matrix<double, kStateSize, kInputSize> model_Bd_;  //Disturbance transfer matrix
-  double roll_time_constant_;
-  double roll_gain_;
-  double pitch_time_constant_;
-  double pitch_gain_;
+  //double roll_time_constant_;
+  //double roll_gain_;
+  //double pitch_time_constant_;
+  //double pitch_gain_;
   Eigen::Vector3d drag_coefficients_;
-  double mass_;
+  double mass1_;
+  double mass2_;
+  double length_;
+  Eigen::Vector3d d1_;
+  Eigen::Vector3d d2_;
 
   // controller parameters
   // state penalty
   Eigen::Vector3d q_position_;
   Eigen::Vector3d q_velocity_;
-  Eigen::Vector2d q_attitude_;
+  //Eigen::Vector2d q_attitude_;
 
   // control penalty
   Eigen::Vector3d r_command_;
   Eigen::Vector3d r_delta_command_;
 
   // yaw P gain
-  double K_yaw_;
+  //double K_yaw_;
+  Eigen::Vector3d gain_attitude_;
+  Eigen::Vector3d gain_angular_rate_;
+
 
   // backup LQR
   Eigen::MatrixXd LQR_K_;
@@ -200,16 +241,26 @@ class LinearModelPredictiveController
   double position_error_integration_limit_;
 
   // control input limits
-  double roll_limit_;
-  double pitch_limit_;
-  double yaw_rate_limit_;
-  double thrust_min_;
-  double thrust_max_;
+  double thrust_x_min_;
+  double thrust_x_max_;
+  double thrust_y_min_;
+  double thrust_y_max_;
+  double thrust_z_min_;
+  double thrust_z_max_;  
+
+  double rot_acc_x_min_;
+  double rot_acc_x_max_;
+  double rot_acc_y_min_;
+  double rot_acc_y_max_;
+  double rot_acc_z_min_;
+  double rot_acc_z_max_;    
 
   // reference queue
   MPCQueue mpc_queue_;
   Vector3dDeque position_ref_, velocity_ref_, acceleration_ref_;
   std::deque<double> yaw_ref_, yaw_rate_ref_;
+  QuaterniondDeque orientation_reference_;
+  Vector3dDeque angular_velocity_W_reference_;
   // solver queue
   std::deque<Eigen::Matrix<double, kStateSize, 1>> CVXGEN_queue_;
 
@@ -218,8 +269,8 @@ class LinearModelPredictiveController
   KFDisturbanceObserver disturbance_observer_;
 
   // commands
-  Eigen::Vector4d command_roll_pitch_yaw_thrust_;  //actual roll, pitch, yaw, thrust command
-  Eigen::Vector3d linearized_command_roll_pitch_thrust_;
+  Eigen::Vector3d command_thrust_sigma_;  //actual roll, pitch, yaw, thrust command
+  Eigen::Vector3d command_moment_sigma_;
 
   // steady state calculation
   SteadyStateCalculation steady_state_calculation_;
@@ -229,8 +280,17 @@ class LinearModelPredictiveController
   double solve_time_average_;
 
   // most recent odometry information
-  mav_msgs::EigenOdometry odometry_;
-  bool received_first_odometry_;
+  mav_msgs::EigenOdometry odometry1_;
+  bool received_first_odometry1_;
+
+  mav_msgs::EigenOdometry odometryL_;
+  bool received_first_odometryL_;
+
+  Eigen::Vector3d encoders_;
+  bool received_first_encoders_;
+  
+  ros::Publisher odom_L_publisher;
+
 };
 
 }  // end namespace mav_control

@@ -1,6 +1,6 @@
-/* Produced by CVXGEN, 2015-02-11 07:30:06 -0500.  */
-/* CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com. */
-/* The code in this file is Copyright (C) 2006-2012 Jacob Mattingley. */
+/* Produced by CVXGEN, 2019-01-22 17:28:11 -0500.  */
+/* CVXGEN is Copyright (C) 2006-2017 Jacob Mattingley, jem@cvxgen.com. */
+/* The code in this file is Copyright (C) 2006-2017 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
 /* applications without prior written permission from Jacob Mattingley. */
 
@@ -20,12 +20,6 @@
 #include <stdio.h>
 #endif
 #endif
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-
-
 /* Space must be allocated somewhere (testsolver.c, csolve.c or your own */
 /* program) for the global variables vars, params, work and settings. */
 /* At the bottom of this file, they are externed. */
@@ -34,99 +28,118 @@
 #define pm(A, m, n) printmatrix(#A, A, m, n, 1)
 #endif
 typedef struct Params_t {
-  double x_0[8];
-  double x_ss_0[8];
-  double Q[64];
-  double u_ss[3];
-  double R[9];
+  double x_0[6];
+  double x_ss_0[6];
+  double Q_x[36];
+  double u_ss_0[3];
+  double R_u[9];
   double u_prev[3];
-  double R_omega[9];
-  double x_ss_1[8];
-  double x_ss_2[8];
-  double x_ss_3[8];
-  double x_ss_4[8];
-  double x_ss_5[8];
-  double x_ss_6[8];
-  double x_ss_7[8];
-  double x_ss_8[8];
-  double x_ss_9[8];
-  double x_ss_10[8];
-  double x_ss_11[8];
-  double x_ss_12[8];
-  double x_ss_13[8];
-  double x_ss_14[8];
-  double x_ss_15[8];
-  double x_ss_16[8];
-  double x_ss_17[8];
-  double x_ss_18[8];
-  double x_ss_19[8];
-  double Q_final[64];
-  double A[64];
-  double B[24];
-  double Bd[24];
+  double R_delta[9];
+  double x_ss_1[6];
+  double u_ss_1[3];
+  double x_ss_2[6];
+  double u_ss_2[3];
+  double x_ss_3[6];
+  double u_ss_3[3];
+  double x_ss_4[6];
+  double u_ss_4[3];
+  double x_ss_5[6];
+  double u_ss_5[3];
+  double x_ss_6[6];
+  double u_ss_6[3];
+  double x_ss_7[6];
+  double u_ss_7[3];
+  double x_ss_8[6];
+  double u_ss_8[3];
+  double x_ss_9[6];
+  double u_ss_9[3];
+  double x_ss_10[6];
+  double u_ss_10[3];
+  double x_ss_11[6];
+  double u_ss_11[3];
+  double x_ss_12[6];
+  double u_ss_12[3];
+  double x_ss_13[6];
+  double u_ss_13[3];
+  double x_ss_14[6];
+  double u_ss_14[3];
+  double x_ss_15[6];
+  double u_ss_15[3];
+  double x_ss_16[6];
+  double u_ss_16[3];
+  double x_ss_17[6];
+  double u_ss_17[3];
+  double x_ss_18[6];
+  double u_ss_18[3];
+  double x_ss_19[6];
+  double P[36];
+  double A[36];
+  double B[18];
+  double Bd[18];
   double d[3];
   double u_min[3];
   double u_max[3];
   double *x[1];
   double *x_ss[20];
+  double *u_ss[19];
 } Params;
 typedef struct Vars_t {
   double *u_0; /* 3 rows. */
-  double *x_1; /* 8 rows. */
+  double *x_1; /* 6 rows. */
   double *u_1; /* 3 rows. */
   double *t_01; /* 3 rows. */
-  double *x_2; /* 8 rows. */
+  double *x_2; /* 6 rows. */
   double *u_2; /* 3 rows. */
   double *t_02; /* 3 rows. */
-  double *x_3; /* 8 rows. */
+  double *x_3; /* 6 rows. */
   double *u_3; /* 3 rows. */
   double *t_03; /* 3 rows. */
-  double *x_4; /* 8 rows. */
+  double *x_4; /* 6 rows. */
   double *u_4; /* 3 rows. */
   double *t_04; /* 3 rows. */
-  double *x_5; /* 8 rows. */
+  double *x_5; /* 6 rows. */
   double *u_5; /* 3 rows. */
   double *t_05; /* 3 rows. */
-  double *x_6; /* 8 rows. */
+  double *x_6; /* 6 rows. */
   double *u_6; /* 3 rows. */
   double *t_06; /* 3 rows. */
-  double *x_7; /* 8 rows. */
+  double *x_7; /* 6 rows. */
   double *u_7; /* 3 rows. */
   double *t_07; /* 3 rows. */
-  double *x_8; /* 8 rows. */
+  double *x_8; /* 6 rows. */
   double *u_8; /* 3 rows. */
   double *t_08; /* 3 rows. */
-  double *x_9; /* 8 rows. */
+  double *x_9; /* 6 rows. */
   double *u_9; /* 3 rows. */
   double *t_09; /* 3 rows. */
-  double *x_10; /* 8 rows. */
+  double *x_10; /* 6 rows. */
   double *u_10; /* 3 rows. */
   double *t_10; /* 3 rows. */
-  double *x_11; /* 8 rows. */
+  double *x_11; /* 6 rows. */
   double *u_11; /* 3 rows. */
   double *t_11; /* 3 rows. */
-  double *x_12; /* 8 rows. */
+  double *x_12; /* 6 rows. */
   double *u_12; /* 3 rows. */
   double *t_12; /* 3 rows. */
-  double *x_13; /* 8 rows. */
+  double *x_13; /* 6 rows. */
   double *u_13; /* 3 rows. */
   double *t_13; /* 3 rows. */
-  double *x_14; /* 8 rows. */
+  double *x_14; /* 6 rows. */
   double *u_14; /* 3 rows. */
   double *t_14; /* 3 rows. */
-  double *x_15; /* 8 rows. */
+  double *x_15; /* 6 rows. */
   double *u_15; /* 3 rows. */
   double *t_15; /* 3 rows. */
-  double *x_16; /* 8 rows. */
+  double *x_16; /* 6 rows. */
   double *u_16; /* 3 rows. */
   double *t_16; /* 3 rows. */
-  double *x_17; /* 8 rows. */
+  double *x_17; /* 6 rows. */
   double *u_17; /* 3 rows. */
   double *t_17; /* 3 rows. */
-  double *x_18; /* 8 rows. */
+  double *x_18; /* 6 rows. */
   double *u_18; /* 3 rows. */
   double *t_18; /* 3 rows. */
-  double *x_19; /* 8 rows. */
+  double *x_19; /* 6 rows. */
   double *u[19];
   double *x[20];
 } Vars;
@@ -134,50 +147,68 @@ typedef struct Workspace_t {
   double h[114];
   double s_inv[114];
   double s_inv_z[114];
-  double b[206];
-  double q[263];
-  double rhs[697];
-  double x[697];
+  double b[168];
+  double q[225];
+  double rhs[621];
+  double x[621];
   double *s;
   double *z;
   double *y;
-  double lhs_aff[697];
-  double lhs_cc[697];
-  double buffer[697];
-  double buffer2[697];
-  double KKT[3284];
-  double L[5723];
-  double d[697];
-  double v[697];
-  double d_inv[697];
+  double lhs_aff[621];
+  double lhs_cc[621];
+  double buffer[621];
+  double buffer2[621];
+  double KKT[2322];
+  double L[3496];
+  double d[621];
+  double v[621];
+  double d_inv[621];
   double gap;
   double optval;
   double ineq_resid_squared;
   double eq_resid_squared;
   double block_33[1];
   /* Pre-op symbols. */
-  double quad_203336859648[1];
-  double quad_830833205248[1];
-  double quad_295866224640[1];
-  double quad_600568381440[1];
-  double quad_898851794944[1];
-  double quad_88433618944[1];
-  double quad_240204779520[1];
-  double quad_635618762752[1];
-  double quad_732753989632[1];
-  double quad_427523055616[1];
-  double quad_976046530560[1];
-  double quad_688550678528[1];
-  double quad_304816418816[1];
-  double quad_819339411456[1];
-  double quad_101800079360[1];
-  double quad_976903761920[1];
-  double quad_141299838976[1];
-  double quad_343404097536[1];
-  double quad_815806124032[1];
-  double quad_997002137600[1];
-  double quad_141630619648[1];
-  double quad_854393544704[1];
+  double quad_345851330560[1];
+  double quad_503357964288[1];
+  double quad_689417555968[1];
+  double quad_590025695232[1];
+  double quad_24887435264[1];
+  double quad_373406756864[1];
+  double quad_282534416384[1];
+  double quad_569492807680[1];
+  double quad_658085392384[1];
+  double quad_268442972160[1];
+  double quad_212760903680[1];
+  double quad_604237524992[1];
+  double quad_899615596544[1];
+  double quad_9807298560[1];
+  double quad_730290806784[1];
+  double quad_691068739584[1];
+  double quad_512929845248[1];
+  double quad_46428270592[1];
+  double quad_907958816768[1];
+  double quad_364190564352[1];
+  double quad_603410014208[1];
+  double quad_253294055424[1];
+  double quad_406480764928[1];
+  double quad_450189660160[1];
+  double quad_622448181248[1];
+  double quad_135073144832[1];
+  double quad_512757641216[1];
+  double quad_265658822656[1];
+  double quad_225439469568[1];
+  double quad_611752235008[1];
+  double quad_945124098048[1];
+  double quad_625116979200[1];
+  double quad_566313590784[1];
+  double quad_323441446912[1];
+  double quad_589385719808[1];
+  double quad_920610275328[1];
+  double quad_700597231616[1];
+  double quad_379984363520[1];
+  double quad_438523551744[1];
+  double quad_677275955200[1];
   int converged;
 } Workspace;
 typedef struct Settings_t {
@@ -251,9 +282,5 @@ float ran1(long*idum, int reset);
 float randn_internal(long *idum, int reset);
 double randn(void);
 void reset_rand(void);
-
-#ifdef __cplusplus
- }
-#endif
 
 #endif

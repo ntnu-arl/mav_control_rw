@@ -1,0 +1,71 @@
+#==================================================================================================================
+#
+# Project:	MPC for multirotor systems.
+#
+# function:	MPC Position controller parameters
+#
+# Author:	Mina Kamel	mina.kamel@ethz.ch
+#
+# Ge:nerated:	03-Apr-2015 13:11:59
+#
+#==================================================================================================================
+
+## Controller Parameters:
+mass1: 0.84
+mass2: 0.84
+length: 0.75
+joint1_offset: [-0.17, 0.0, 0.0]
+joint2_offset: [ 0.17, 0.0, 0.0]
+#roll_time_constant: 0.14
+#pitch_time_constant: 0.1057
+#roll_gain: 1.0017
+#pitch_gain: 1.0857
+drag_coefficients: [ 0.010000 , 0.010000, 0.0000]
+
+q_x: 40
+q_y: 40
+q_z: 60
+
+q_vx: 10
+q_vy: 10
+q_vz: 25
+
+r_thrust_x: 1
+r_thrust_y: 1
+r_thrust_z: 1
+
+r_dthrust_x: 0.002
+r_dthrust_y: 0.002
+r_dthrust_z: 0.002
+
+#roll_max: deg(20.0)
+#pitch_max: deg(20.0)
+#yaw_rate_max: deg(90)
+thrust_x_max: 2.5
+thrust_y_max: 2.5
+thrust_z_min: 7
+thrust_z_max: 13
+
+rot_acc_x_max: 1
+rot_acc_y_max: 1
+rot_acc_z_max: 1
+
+KR_x: 1
+KR_y: 1
+KR_z: 1
+K_omega_x: 1
+K_omega_y: 1
+K_omega_z: 1
+
+K_yaw: 1.8
+
+Ki_xy: 0.2
+Ki_z: 0.3
+position_error_integration_limit: 2
+antiwindup_ball: 0.4
+
+enable_offset_free : true
+enable_integrator : false
+
+sampling_time: 0.02    #IMPORTANT: set this equal to the rate of odometry msg
+prediction_sampling_time: 0.1

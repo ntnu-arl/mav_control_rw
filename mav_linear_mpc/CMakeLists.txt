@@ -21,11 +21,11 @@ cs_add_library(mav_linear_mpc
 )
 
 cs_add_library(cvxgen_solver 
-  lib/ldl.c
-  lib/solver.c
-  lib/matrix_support.c
-  lib/util.c
-  lib/variables_definition.c
+  lib/ldl.cpp
+  lib/solver.cpp
+  lib/matrix_support.cpp
+  lib/util.cpp
+  lib/variables_definition.cpp
 )
 
 

@@ -30,8 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef KFDisturbanceObserver_H_
-#define KFDisturbanceObserver_H_
+#ifndef INCLUDE_ROTORS_KFDisturbanceObserver_H_
+#define INCLUDE_ROTORS_KFDisturbanceObserver_H_
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -52,10 +52,9 @@ class KFDisturbanceObserver
  public:
 
   KFDisturbanceObserver(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
-  void reset(const Eigen::Vector3d& initial_position, const Eigen::Vector3d& initial_velocity,
-             const Eigen::Vector3d& initial_attitude, const Eigen::Vector3d& initial_angular_rate,
-             const Eigen::Vector3d& initial_external_forces,
-             const Eigen::Vector3d& initial_external_moments);
+  void reset(const Eigen::Vector3d& initial_position,
+                                  const Eigen::Vector3d& initial_velocity,
+                                  const Eigen::Vector3d& initial_external_forces);
 
   //Getters
   Eigen::Vector3d getEstimatedPosition() const
@@ -74,34 +73,10 @@ class KFDisturbanceObserver
       return Eigen::Vector3d::Zero();
   }
 
-  Eigen::Vector3d getEstimatedAttitude() const
-  {
-    if (initialized_)
-      return state_.segment(6, 3);
-    else
-      return Eigen::Vector3d::Zero();
-  }
-
-  Eigen::Vector3d getEstimatedAngularVelocity() const
-  {
-    if (initialized_)
-      return state_.segment(9, 3);
-    else
-      return Eigen::Vector3d::Zero();
-  }
-
   Eigen::Vector3d getEstimatedExternalForces() const
   {
     if (initialized_ == true && is_calibrating_ == false)
-      return state_.segment(12, 3) - forces_offset_;
-    else
-      return Eigen::Vector3d::Zero();
-  }
-
-  Eigen::Vector3d getEstimatedExternalMoments() const
-  {
-    if (initialized_ && is_calibrating_ == false)
-      return state_.segment(15, 3) - moments_offset_;
+      return state_.segment(6, 3) - forces_offset_;
     else
       return Eigen::Vector3d::Zero();
   }
@@ -112,7 +87,7 @@ class KFDisturbanceObserver
   void feedPositionMeasurement(const Eigen::Vector3d& position);
   void feedVelocityMeasurement(const Eigen::Vector3d& velocity);
   void feedRotationMatrix(const Eigen::Matrix3d& rotation_matrix);
-  void feedAttitudeCommand(const Eigen::Vector4d& roll_pitch_yaw_thrust_cmd);
+  void feedThrustCommand(const Eigen::Vector3d& thrust_cmd);
 
   bool updateEstimator();
 
@@ -121,8 +96,8 @@ class KFDisturbanceObserver
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
-  static constexpr int kStateSize = 18;
-  static constexpr int kMeasurementSize = 9;
+  static constexpr int kStateSize = 9;
+  static constexpr int kMeasurementSize = 6;
   static constexpr double kGravity = 9.8066;
 
   typedef Eigen::Matrix<double, kStateSize, 1> StateVector;
@@ -133,7 +108,7 @@ class KFDisturbanceObserver
   Eigen::Matrix<double, kStateSize, 1> predicted_state_;
   Eigen::Matrix<double, kMeasurementSize, 1> measurements_;  // [pos, vel, rpy]
   Eigen::Matrix3d rotation_matrix_;
-  Eigen::Vector4d roll_pitch_yaw_thrust_cmd_;
+  Eigen::Vector3d thrust_cmd_;
   Eigen::Matrix<double, kStateSize, 1> process_noise_covariance_; // We express it as diag() later.
   Eigen::Matrix<double, kStateSize, kStateSize> state_covariance_;
   Eigen::Matrix<double, kStateSize, 1> initial_state_covariance_; // P0
@@ -141,28 +116,16 @@ class KFDisturbanceObserver
   Eigen::Matrix3d drag_coefficients_matrix_;
 
   Eigen::SparseMatrix<double> F_; // System dynamics matrix.
+  Eigen::Matrix<double, kStateSize, 3> B_; // Input gain matrix.
 //  Eigen::Matrix<double, kStateSize, kStateSize> F_; // System dynamics matrix.
   Eigen::Matrix<double, kStateSize, kMeasurementSize> K_; // Kalman gain matrix.
   Eigen::SparseMatrix<double> H_; // Measurement matrix.
 //  Eigen::Matrix<double, kMeasurementSize, kStateSize> H_; // Measurement matrix.
 
   Eigen::Vector3d external_forces_limit_;
-  Eigen::Vector3d external_moments_limit_;
-  Eigen::Vector3d omega_limit_;
+  //Eigen::Vector3d omega_limit_;
 
   // Parameters
-  double roll_damping_;
-  double roll_omega_;
-  double roll_gain_;
-
-  double pitch_damping_;
-  double pitch_omega_;
-  double pitch_gain_;
-
-  double yaw_damping_;
-  double yaw_omega_;
-  double yaw_gain_;
-
   double sampling_time_;
 
   ros::ServiceServer service_;
@@ -172,7 +135,6 @@ class KFDisturbanceObserver
   ros::Time start_calibration_time_;   // t0 calibration
   ros::Duration calibration_duration_;     // calibration duration
   Eigen::Vector3d forces_offset_;
-  Eigen::Vector3d moments_offset_;
   int calibration_counter_;
   bool startCalibration();
 
@@ -188,4 +150,4 @@ class KFDisturbanceObserver
 
 };
 }
-#endif /* SRC_KFDisturbanceObserver_H_ */
+#endif /* INCLUDE_ROTORS_KFDisturbanceObserver_H_ */

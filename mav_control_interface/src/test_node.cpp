@@ -94,8 +94,8 @@ class DummyController : public PositionControllerInterface{
     return true;
   }
 
- private:
-  mav_msgs::EigenTrajectoryPointDeque reference_array_;
+  private:
+    mav_msgs::EigenTrajectoryPointDeque reference_array_;
 
 };
 

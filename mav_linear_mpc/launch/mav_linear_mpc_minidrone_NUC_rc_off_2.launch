@@ -1,0 +1,12 @@
+<launch>
+  <arg name="mav_name" default="minidrone_NUC" />
+  <arg name="namespace" default="quad2"/>
+  
+  <group ns="$(arg namespace)">
+    <node name="command_converter_2" pkg="mav_control_interface" type="command_converter_2" output="screen">
+      <param name="odometry_topic" value="msf_core/odometry" />  
+      <param name="attitude_thrust_topic" value="command/attitude_thrust" /> 
+      <param name="rpyrate_thrust_topic" value="command/roll_pitch_yawrate_thrust" />         
+    </node>
+  </group>
+</launch>

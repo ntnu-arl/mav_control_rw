@@ -41,7 +41,7 @@ namespace mav_control {
 class SteadyStateCalculation
 {
  private:
-  static constexpr int kStateSize = 8;
+  static constexpr int kStateSize = 6;
   static constexpr int kInputSize = 3;
   static constexpr int kMeasurementSize = 6;
   static constexpr int kDisturbanceSize = 3;

@@ -31,6 +31,7 @@
 namespace mav_control {
 
 typedef std::deque<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > Vector3dDeque;
+typedef std::deque<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> > QuaterniondDeque;
 
 class MPCQueue
 {
@@ -51,9 +52,9 @@ class MPCQueue
 
   void insertReferenceTrajectory(const mav_msgs::EigenTrajectoryPointDeque& queue);
 
-  void getQueue(Vector3dDeque& position_reference_, Vector3dDeque& velocity_reference_,
-                Vector3dDeque& acceleration_reference, std::deque<double>& yaw_reference_,
-                std::deque<double>& yaw_rate_reference_);
+  void getQueue(Vector3dDeque& position_reference, Vector3dDeque& velocity_reference,
+                        Vector3dDeque& acceleration_reference, QuaterniondDeque& orientation_reference,
+                        Vector3dDeque& angular_velocity_W_reference);
 
   void updateQueue();
 
@@ -76,8 +77,10 @@ class MPCQueue
   Vector3dDeque position_reference_;
   Vector3dDeque velocity_reference_;
   Vector3dDeque acceleration_reference_;
-  std::deque<double> yaw_reference_;
-  std::deque<double> yaw_rate_reference_;
+  //std::deque<double> yaw_reference_;
+  //std::deque<double> yaw_rate_reference_;
+  QuaterniondDeque orientation_reference_;
+  Vector3dDeque angular_velocity_W_reference_;
   double queue_start_time_;
 
   void clearQueue();
