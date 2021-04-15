@@ -2,13 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(mav_linear_mpc)
 
 find_package(catkin_simple REQUIRED)
+find_package(Eigen3 REQUIRED)
+
 catkin_simple(ALL_DEPS_REQUIRED)
-
-set(CMAKE_BUILD_TYPE Release)
-
-if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" AND NOT APPLE)
-  add_definitions(-fPIC)
-endif()
 
 include_directories(lib)
 
