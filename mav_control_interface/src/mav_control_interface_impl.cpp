@@ -47,7 +47,7 @@ MavControlInterfaceImpl::MavControlInterfaceImpl(ros::NodeHandle& nh, ros::NodeH
       mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
       &MavControlInterfaceImpl::CommandTrajectoryCallback, this);
 
-  odometry_subscriber_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
+  odometry_subscriber_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 5,
                                        &MavControlInterfaceImpl::OdometryCallback, this,
                                        ros::TransportHints().tcpNoDelay());
 
