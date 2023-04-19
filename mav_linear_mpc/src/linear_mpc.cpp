@@ -458,6 +458,14 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
   double uy = linearized_command_roll_pitch_thrust_(0)
       * (kGravity / command_roll_pitch_yaw_thrust_(3));
 
+  /* HUAN: limit the final thrust */
+  if (command_roll_pitch_yaw_thrust_(3) > thrust_max_ + kGravity) {
+    command_roll_pitch_yaw_thrust_(3) = thrust_max_ + kGravity;
+  }
+  else if (command_roll_pitch_yaw_thrust_(3) < thrust_min_ + kGravity) {
+    command_roll_pitch_yaw_thrust_(3) = thrust_min_ + kGravity;
+  }
+
   command_roll_pitch_yaw_thrust_(0) = ux * sin(yaw) + uy * cos(yaw);
   command_roll_pitch_yaw_thrust_(1) = ux * cos(yaw) - uy * sin(yaw);
   command_roll_pitch_yaw_thrust_(2) = yaw_ref_.front();

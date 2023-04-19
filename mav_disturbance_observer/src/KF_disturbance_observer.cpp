@@ -384,9 +384,9 @@ bool KFDisturbanceObserver::updateEstimator()
     t_previous = t0;
   }
 
-  //check that dt is not so different from 0.01
-  if (dt > 0.015) {
-    dt = 0.015;
+  //check that dt is not so different from sampling time
+  if (dt > 0.025) {
+    dt = 0.025;
   }
 
   if (dt < 0.005) {
