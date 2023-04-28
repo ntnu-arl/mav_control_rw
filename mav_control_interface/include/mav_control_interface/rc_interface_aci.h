@@ -26,6 +26,7 @@ namespace mav_control_interface {
 class RcInterfaceAci : public RcInterfaceBase {
  public:
   static constexpr float STICK_DEADZONE = 0.1;
+  // static constexpr float STICK_DEADZONE = 2.0;
 
   RcInterfaceAci(const ros::NodeHandle& nh);
 

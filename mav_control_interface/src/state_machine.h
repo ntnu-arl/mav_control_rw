@@ -112,6 +112,7 @@ class StateMachineDefinition : public msm_front::state_machine_def<StateMachineD
   struct SetReferenceAttitude;
   struct SetReferencePosition;
   struct SetReferenceToCurrentPosition;
+  struct SetReferenceToTakeoffPosition;
   struct SetOdometry;
   struct ComputeCommand;
   struct SetReferenceFromRc;
@@ -164,6 +165,7 @@ class StateMachineDefinition : public msm_front::state_machine_def<StateMachineD
       msm_front::Row<HaveOdometry, RcUpdate, InternalTransition, SetReferenceAttitude, RcModeManual >,
       msm_front::Row<HaveOdometry, OdometryUpdate, InternalTransition, SetOdometry, NoGuard >,
       msm_front::Row<HaveOdometry, OdometryWatchdog, RemoteControl, PrintOdometryWatchdogWarning, OdometryOutdated >,
+      // msm_front::Row<HaveOdometry, RcUpdate, PositionHold, SetReferenceToTakeoffPosition, RcInactivePosition >,
       msm_front::Row<HaveOdometry, RcUpdate, PositionHold, SetReferenceToCurrentPosition, RcInactivePosition >,
       msm_front::Row<HaveOdometry, RcUpdate, RcTeleOp, SetReferenceFromRc, RcActivePosition >,
       //  +---------+-------------+---------+---------------------------+----------------------+
@@ -320,6 +322,22 @@ private:
     {
       mav_msgs::EigenTrajectoryPoint reference;
       reference.position_W = fsm.current_state_.position_W;
+      reference.setFromYaw(mav_msgs::yawFromQuaternion(fsm.current_state_.orientation_W_B));
+
+      fsm.controller_->setReference(reference);
+      fsm.current_reference_queue_.clear();
+      fsm.current_reference_queue_.push_back(reference);
+    }
+  };
+
+  struct SetReferenceToTakeoffPosition
+  {
+    template<class EVT, class FSM, class SourceState, class TargetState>
+    void operator()(EVT const& evt, FSM& fsm, SourceState&, TargetState&)
+    {
+      mav_msgs::EigenTrajectoryPoint reference;
+      reference.position_W = fsm.current_state_.position_W;
+      reference.position_W.z() += 0.5;
       reference.setFromYaw(mav_msgs::yawFromQuaternion(fsm.current_state_.orientation_W_B));
 
       fsm.controller_->setReference(reference);
