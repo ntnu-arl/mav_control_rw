@@ -26,6 +26,10 @@ RcInterfaceAci::RcInterfaceAci(const ros::NodeHandle& nh)
       is_on_(false)
 {
   rc_sub_ = nh_.subscribe("rc", 1, &RcInterfaceAci::rcCallback, this);
+  ros::param::get(ros::this_node::getName() + "/rc/thr_deadzone", THR_STICK_DEADZONE);
+  ros::param::get(ros::this_node::getName() + "/rc/rpy_deadzone", STICK_DEADZONE);
+  ROS_WARN("THR Deadzone: %f", THR_STICK_DEADZONE);
+  ROS_WARN("rpy Deadzone: %f", STICK_DEADZONE);
 }
 
 void RcInterfaceAci::rcCallback(const sensor_msgs::JoyConstPtr& msg)
